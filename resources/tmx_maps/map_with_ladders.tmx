@@ -34,7 +34,7 @@
    </properties>
   </object>
  </objectgroup>
- <layer id="18" name="test" width="20" height="17">
+ <layer id="18" name="Passable Platforms" width="20" height="17">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
