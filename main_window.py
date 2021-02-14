@@ -202,7 +202,7 @@ class MyGame(arcade.Window):
         self.jump_sound = arcade.load_sound("resources/sounds/jump1.wav")
         self.game_over = arcade.load_sound("resources/sounds/gameover1.wav")
 
-    def setup(self):
+    def setup(self, map_name):
         """ Set up the game here. Call this function to restart the game. """
 
         # Used to keep track of our scrolling
@@ -236,10 +236,10 @@ class MyGame(arcade.Window):
         coins_layer_name = "Coins"
 
         # Map name
-        map_name = f"resources/tmx_maps/map_with_ladders.tmx"
+        self.map_name = f"resources/tmx_maps/{map_name}"
 
         # Read in the tiled map
-        my_map = arcade.tilemap.read_tmx(map_name)
+        my_map = arcade.tilemap.read_tmx(self.map_name)
 
         # Calculate the right edge of the my_map in pixels
         self.map_width = my_map.map_size.width * GRID_PIXEL_SIZE
@@ -415,7 +415,7 @@ class MyGame(arcade.Window):
 
         # Respawn
         if self.player_sprite.bottom < -128:
-            self.setup()
+            self.setup(self.map_name)
 
         # Update walls, used with moving platforms
         self.update_passable_floor()
@@ -513,7 +513,7 @@ class MyGame(arcade.Window):
 def main():
     """ Main method """
     window = MyGame()
-    window.setup()
+    window.setup("map_with_ladders.tmx")
     arcade.run()
 
 
