@@ -104,6 +104,9 @@ class PlayerCharacter(arcade.Sprite):
         # self.set_hit_box([[-22, -64], [22, -64], [22, 28], [-22, 28]])
         self.set_hit_box(self.texture.hit_box_points)
 
+    def update(self):
+        pass
+
     def update_animation(self, delta_time: float = 1/60):
 
         # Figure out if we need to flip face left or right
@@ -306,6 +309,10 @@ class MyGame(arcade.Window):
         arcade.draw_text(score_text, 10 + self.view_left, 10 + self.view_bottom,
                          arcade.csscolor.BLACK, 18)
 
+        debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
+        arcade.draw_text(debug_text, 10 + self.view_left, 30 + self.view_bottom,
+                         arcade.csscolor.BLACK, 18)
+
         # Draw hit boxes.
         # for wall in self.wall_list:
         #     wall.draw_hit_box(arcade.color.BLACK, 3)
@@ -403,6 +410,10 @@ class MyGame(arcade.Window):
         self.coin_list.update_animation(delta_time)
         self.background_list.update_animation(delta_time)
         self.player_list.update_animation(delta_time)
+
+        # Respawn
+        if self.player_sprite.bottom < -128:
+            self.setup()
 
         # Update walls, used with moving platforms
         self.update_passable_floor()
