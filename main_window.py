@@ -449,10 +449,12 @@ class MyGame(arcade.Window):
             coin.remove_from_sprite_lists()
             arcade.play_sound(self.collect_coin_sound)
 
+        # --- Manage Scrolling ---
+        self.scroll_viewport()
+
+    def scroll_viewport(self):
         # Track if we need to change the viewport
         changed_viewport = False
-
-        # --- Manage Scrolling ---
 
         # Scroll left
         left_boundary = self.view_left + LEFT_VIEWPORT_MARGIN
