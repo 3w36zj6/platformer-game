@@ -190,7 +190,8 @@ class MyGame(arcade.Window):
         self.view_bottom = 0
         self.view_left = 0
 
-        self.end_of_map = 0
+        self.map_height = 0
+        self.map_width = 0
 
         # Keep track of the score
         self.score = 0
@@ -241,7 +242,8 @@ class MyGame(arcade.Window):
         my_map = arcade.tilemap.read_tmx(map_name)
 
         # Calculate the right edge of the my_map in pixels
-        self.end_of_map = my_map.map_size.width * GRID_PIXEL_SIZE
+        self.map_width = my_map.map_size.width * GRID_PIXEL_SIZE
+        self.map_height = my_map.map_size.height * GRID_PIXEL_SIZE
 
         # -- Platforms
         self.wall_list = arcade.tilemap.process_layer(my_map,
@@ -453,6 +455,7 @@ class MyGame(arcade.Window):
         self.scroll_viewport()
 
     def scroll_viewport(self):
+        '''
         # Track if we need to change the viewport
         changed_viewport = False
 
@@ -467,20 +470,34 @@ class MyGame(arcade.Window):
         if self.player_sprite.right > right_boundary:
             self.view_left += self.player_sprite.right - right_boundary
             changed_viewport = True
+        '''
+
+        self.view_left = self.player_sprite.position[0] - SCREEN_WIDTH // 2
 
         # Scroll up
         top_boundary = self.view_bottom + SCREEN_HEIGHT - TOP_VIEWPORT_MARGIN
         if self.player_sprite.top > top_boundary:
             self.view_bottom += self.player_sprite.top - top_boundary
-            changed_viewport = True
+            #changed_viewport = True
 
         # Scroll down
         bottom_boundary = self.view_bottom + BOTTOM_VIEWPORT_MARGIN
         if self.player_sprite.bottom < bottom_boundary:
             self.view_bottom -= bottom_boundary - self.player_sprite.bottom
-            changed_viewport = True
+            #changed_viewport = True
 
-        if changed_viewport:
+        if self.view_left < GRID_PIXEL_SIZE:
+            self.view_left = GRID_PIXEL_SIZE
+        elif self.view_left > self.map_width - SCREEN_WIDTH - GRID_PIXEL_SIZE:
+            self.view_left = self.map_width - SCREEN_WIDTH - GRID_PIXEL_SIZE
+
+        if self.view_bottom < 0:
+            self.view_bottom = 0
+        elif self.view_bottom > self.map_height - SCREEN_HEIGHT:
+            self.view_bottom = self.map_height - SCREEN_HEIGHT
+
+        #if changed_viewport:
+        if True:
             # Only scroll to integers. Otherwise we end up with pixels that
             # don"t line up on the screen
             self.view_bottom = int(self.view_bottom)
