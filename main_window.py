@@ -13,7 +13,7 @@ SCREEN_TITLE = "Platformer"
 
 # Constants used to scale our sprites from their original size
 TILE_SCALING = 0.5
-CHARACTER_SCALING = TILE_SCALING * 2
+CHARACTER_SCALING = 1.0
 COIN_SCALING = TILE_SCALING
 SPRITE_PIXEL_SIZE = 128
 GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
@@ -68,6 +68,9 @@ class PlayerCharacter(arcade.Sprite):
         self.climbing = False
         self.is_on_ladder = False
 
+
+        self.animation_frame = 0
+
         # --- Load Textures ---
 
         # Images from Kenney.nl"s Asset Pack 3
@@ -79,14 +82,14 @@ class PlayerCharacter(arcade.Sprite):
         # main_path = "resources/images/animated_characters/robot/robot"
 
         # Load textures for idle standing
-        self.idle_texture_pair = load_texture_pair(f"{main_path}_idle.png")
-        self.jump_texture_pair = load_texture_pair(f"{main_path}_jump.png")
-        self.fall_texture_pair = load_texture_pair(f"{main_path}_fall.png")
+        self.idle_texture_pair = load_texture_pair(f"resources/images/player/adventurer-idle-2-00.png")
+        self.jump_texture_pair = load_texture_pair(f"resources/images/player/adventurer-crnr-jmp-00.png")
+        self.fall_texture_pair = load_texture_pair(f"resources/images/player/adventurer-fall-00.png")
 
         # Load textures for walking
         self.walk_textures = []
-        for i in range(8):
-            texture = load_texture_pair(f"{main_path}_walk{i}.png")
+        for i in range(6):
+            texture = load_texture_pair(f"resources/images/player/adventurer-run-0{i}.png")
             self.walk_textures.append(texture)
 
         # Load textures for climbing
@@ -101,8 +104,8 @@ class PlayerCharacter(arcade.Sprite):
 
         # Hit box will be set based on the first image used. If you want to specify
         # a different hit box, you can do it like the code below.
-        # self.set_hit_box([[-22, -64], [22, -64], [22, 28], [-22, 28]])
-        self.set_hit_box(self.texture.hit_box_points)
+        self.set_hit_box([[-22, -64], [22, -64], [22, 28], [-22, 28]])
+        #self.set_hit_box(self.texture.hit_box_points)
 
     def update(self):
         pass
@@ -142,10 +145,10 @@ class PlayerCharacter(arcade.Sprite):
             return
 
         # Walking animation
-        self.cur_texture += 1
-        if self.cur_texture > 7:
-            self.cur_texture = 0
+        self.cur_texture = self.animation_frame // 4 % 6
         self.texture = self.walk_textures[self.cur_texture][self.character_face_direction]
+
+        self.animation_frame += 1
 
 
 class MyGame(arcade.Window):
