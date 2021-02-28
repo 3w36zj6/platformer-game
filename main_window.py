@@ -329,8 +329,8 @@ class MyGame(arcade.Window):
                          arcade.csscolor.BLACK, 18)
 
         # Draw hit boxes.
-        # for wall in self.wall_list:
-        #     wall.draw_hit_box(arcade.color.BLACK, 3)
+        for wall in self.wall_list:
+            wall.draw_hit_box(arcade.color.BLACK, 3)
         #
         self.player_sprite.draw_hit_box(arcade.color.RED, 3)
 
