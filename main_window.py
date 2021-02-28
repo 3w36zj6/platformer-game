@@ -239,10 +239,10 @@ class MyGame(arcade.Window):
         coins_layer_name = "Coins"
 
         # Map name
-        self.map_name = f"resources/tmx_maps/{map_name}"
+        self.map_name = map_name
 
         # Read in the tiled map
-        my_map = arcade.tilemap.read_tmx(self.map_name)
+        my_map = arcade.tilemap.read_tmx(f"resources/tmx_maps/{self.map_name}")
 
         # Calculate the right edge of the my_map in pixels
         self.map_width = my_map.map_size.width * GRID_PIXEL_SIZE
