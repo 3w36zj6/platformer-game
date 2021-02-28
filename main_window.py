@@ -69,7 +69,11 @@ class PlayerCharacter(arcade.Sprite):
 
         # Animation
         self.animation_frame = 0
-        self.climbing_frame = 0
+        self.climb_frame = 0
+
+        # Attack
+        self.is_attacking = False
+        self.attack_frame = 0
 
         # --- Load Textures ---
 
@@ -106,10 +110,16 @@ class PlayerCharacter(arcade.Sprite):
             self.fall_textures.append(texture)
 
         # Load textures for climbing
-        self.climbing_textures = []
+        self.climb_textures = []
         for i in range(4):
             texture = load_texture_pair(f"resources/images/player/adventurer-ladder-climb-0{i}.png")
-            self.climbing_textures.append(texture)
+            self.climb_textures.append(texture)
+
+        # Load textures for attacking
+        self.attack_textures = []
+        for i in range(4):
+            texture = load_texture_pair(f"resources/images/player/adventurer-air-attack1-0{i}.png")
+            self.attack_textures.append(texture)
 
         # Set the initial texture
         self.texture = self.idle_textures[0][0]
@@ -137,9 +147,18 @@ class PlayerCharacter(arcade.Sprite):
         if not self.is_on_ladder and self.climbing:
             self.climbing = False
         if self.climbing and (abs(self.change_y) > 1 or abs(self.change_x) > 1):
-            self.climbing_frame += 1
+            self.climb_frame += 1
         if self.climbing:
-            self.texture = self.climbing_textures[self.climbing_frame // 4 % 4][self.character_face_direction]
+            self.texture = self.climb_textures[self.climb_frame // 4 % 4][self.character_face_direction]
+            return
+
+        # Attack animation
+        if self.is_attacking:
+            self.texture = self.attack_textures[self.attack_frame // 4][self.character_face_direction]
+            self.attack_frame += 1
+            if self.attack_frame >= 4 * 4:
+                self.is_attacking = False
+                self.attack_frame = 0
             return
 
         # Jumping animation
@@ -387,6 +406,11 @@ class MyGame(arcade.Window):
             self.left_pressed = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_pressed = True
+        elif key == arcade.key.SPACE:
+            if not self.player_sprite.is_attacking:
+                self.player_sprite.is_attacking = True
+                self.player_sprite.attack_frame = 0
+                self.player_sprite.set_position(self.player_sprite.center_x + 20 * ((-1) ** (self.player_sprite.character_face_direction == LEFT_FACING)), self.player_sprite.center_y)
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
