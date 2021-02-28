@@ -21,7 +21,8 @@ GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
 # Movement speed of player, in pixels per frame
 PLAYER_MOVEMENT_SPEED = 7
 GRAVITY = 1.5
-PLAYER_JUMP_SPEED = 30
+PLAYER_JUMP_SPEED = 18
+PLAYER_FALL_SPEED = 18
 
 # How many pixels to keep as a minimum margin between the character
 # and the edge of the screen.
@@ -65,7 +66,10 @@ class PlayerCharacter(arcade.Sprite):
         # Track our state
         self.climbing = False
         self.is_on_ladder = False
+
+        # Jump
         self.can_jump = False
+        self.jump_frame = 0
 
         # Animation
         self.animation_frame = 0
@@ -381,7 +385,8 @@ class MyGame(arcade.Window):
                          arcade.csscolor.BLACK, 18)
 
         #debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
-        debug_text = f"{self.player_sprite.attack_mode} {self.player_sprite.attack_frame}, {self.player_sprite.can_jump}"
+        #debug_text = f"{self.player_sprite.attack_mode} {self.player_sprite.attack_frame}, {self.player_sprite.can_jump}"
+        debug_text = f"{self.player_sprite.jump_frame}"
         arcade.draw_text(debug_text, 10 + self.view_left, 30 + self.view_bottom,
                          arcade.csscolor.BLACK, 18)
 
@@ -413,10 +418,18 @@ class MyGame(arcade.Window):
             elif self.physics_engine.can_jump(y_distance=10) and not self.jump_needs_reset:
                 self.player_sprite.change_y = PLAYER_JUMP_SPEED
                 self.jump_needs_reset = True
+                self.player_sprite.jump_frame = 0
                 arcade.play_sound(self.jump_sound)
         elif self.down_pressed and not self.up_pressed:
             if self.physics_engine.is_on_ladder():
                 self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+
+        if self.player_sprite.jump_frame < 12:
+            if self.up_pressed:
+                self.player_sprite.change_y = PLAYER_JUMP_SPEED
+
+        self.player_sprite.change_y = max(self.player_sprite.change_y, -PLAYER_FALL_SPEED)
+        self.player_sprite.jump_frame += 1
 
         # Process up/down when on a ladder and no movement
         if self.physics_engine.is_on_ladder():
@@ -427,9 +440,9 @@ class MyGame(arcade.Window):
 
         # Process left/right
         if self.right_pressed and not self.left_pressed:
-            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_x = min(self.player_sprite.change_x + 0.7, PLAYER_MOVEMENT_SPEED)
         elif self.left_pressed and not self.right_pressed:
-            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_x = max(self.player_sprite.change_x - 0.7, -PLAYER_MOVEMENT_SPEED)
         else:
             self.player_sprite.change_x = 0
 
