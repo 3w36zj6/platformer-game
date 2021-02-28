@@ -66,6 +66,7 @@ class PlayerCharacter(arcade.Sprite):
         self.jumping = False
         self.climbing = False
         self.is_on_ladder = False
+        self.can_jump = False
 
         # Animation
         self.animation_frame = 0
@@ -74,6 +75,8 @@ class PlayerCharacter(arcade.Sprite):
         # Attack
         self.is_attacking = False
         self.attack_frame = 0
+        self.attack_mode = 0
+        self.next_attack = False
 
         # --- Load Textures ---
 
@@ -116,10 +119,18 @@ class PlayerCharacter(arcade.Sprite):
             self.climb_textures.append(texture)
 
         # Load textures for attacking
-        self.attack_textures = []
+        self.jump_attack_textures = []
         for i in range(4):
             texture = load_texture_pair(f"resources/images/player/adventurer-air-attack1-0{i}.png")
-            self.attack_textures.append(texture)
+            self.jump_attack_textures.append(texture)
+
+        self.attack_textures = []
+        for j in range(1, 4):
+            textures = []
+            for i in range((5, 6, 6)[j-1]):
+                texture = load_texture_pair(f"resources/images/player/adventurer-attack{j}-0{i}.png")
+                textures.append(texture)
+            self.attack_textures.append(textures)
 
         # Set the initial texture
         self.texture = self.idle_textures[0][0]
@@ -154,12 +165,39 @@ class PlayerCharacter(arcade.Sprite):
 
         # Attack animation
         if self.is_attacking:
-            self.texture = self.attack_textures[self.attack_frame // 4][self.character_face_direction]
-            self.attack_frame += 1
-            if self.attack_frame >= 4 * 4:
-                self.is_attacking = False
-                self.attack_frame = 0
-            return
+            if (not self.can_jump) and not self.is_on_ladder:
+                if self.attack_mode != 0:
+                    self.is_attacking = False
+                    self.attack_frame = 0
+                    self.attack_mode = 0
+                    return
+                self.texture = self.jump_attack_textures[self.attack_frame // 4][self.character_face_direction]
+                self.attack_frame += 1
+                if self.attack_frame >= 4 * 4:
+                    self.is_attacking = False
+                    self.attack_frame = 0
+                    self.attack_mode = 0
+                return
+            else:
+                self.texture = self.attack_textures[self.attack_mode - 1][self.attack_frame // 4][self.character_face_direction]
+                self.attack_frame += 1
+                self.change_x = 0
+                if self.attack_mode == 0:
+                    self.is_attacking = False
+                    self.attack_frame = 0
+                    self.attack_mode = 0
+                    return
+                if self.attack_frame >= 4 * (5, 6, 6)[self.attack_mode - 1]:
+                    self.attack_frame = 0
+                    if self.next_attack:
+                        self.next_attack = False
+                        self.attack_mode += 1
+                        return
+                    self.is_attacking = False
+                    self.attack_mode = 0
+                    self.next_attack = False
+                    return
+                return
 
         # Jumping animation
         if self.change_y > 0 and not self.is_on_ladder:
@@ -343,7 +381,8 @@ class MyGame(arcade.Window):
         arcade.draw_text(score_text, 10 + self.view_left, 10 + self.view_bottom,
                          arcade.csscolor.BLACK, 18)
 
-        debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
+        #debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
+        debug_text = f"{self.player_sprite.attack_mode} {self.player_sprite.attack_frame}, {self.player_sprite.can_jump}"
         arcade.draw_text(debug_text, 10 + self.view_left, 30 + self.view_bottom,
                          arcade.csscolor.BLACK, 18)
 
@@ -407,10 +446,14 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_pressed = True
         elif key == arcade.key.SPACE:
-            if not self.player_sprite.is_attacking:
+            if self.player_sprite.attack_mode < 3 and not self.player_sprite.is_on_ladder:
                 self.player_sprite.is_attacking = True
-                self.player_sprite.attack_frame = 0
-                self.player_sprite.set_position(self.player_sprite.center_x + 20 * ((-1) ** (self.player_sprite.character_face_direction == LEFT_FACING)), self.player_sprite.center_y)
+                self.player_sprite.next_attack = True if self.player_sprite.attack_mode != 0 else False
+                if not self.physics_engine.can_jump():
+                    self.player_sprite.set_position(self.player_sprite.center_x + 30 * ((-1)**(self.player_sprite.character_face_direction == LEFT_FACING)), self.player_sprite.center_y)
+                    self.player_sprite.attack_mode = 0
+                elif self.player_sprite.attack_mode == 0:
+                    self.player_sprite.attack_mode = 1
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
@@ -435,9 +478,9 @@ class MyGame(arcade.Window):
 
         # Update animations
         if self.physics_engine.can_jump():
-            self.player_sprite.can_jump = False
-        else:
             self.player_sprite.can_jump = True
+        else:
+            self.player_sprite.can_jump = False
 
         if self.physics_engine.is_on_ladder() and not self.physics_engine.can_jump():
             self.player_sprite.is_on_ladder = True
@@ -449,6 +492,8 @@ class MyGame(arcade.Window):
         self.coin_list.update_animation(delta_time)
         self.background_list.update_animation(delta_time)
         self.player_list.update_animation(delta_time)
+
+        #self.player_list.update()
 
         # Respawn
         if self.player_sprite.bottom < -128:
