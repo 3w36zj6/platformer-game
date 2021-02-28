@@ -63,7 +63,6 @@ class PlayerCharacter(arcade.Sprite):
         self.scale = CHARACTER_SCALING
 
         # Track our state
-        self.jumping = False
         self.climbing = False
         self.is_on_ladder = False
         self.can_jump = False
