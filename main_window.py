@@ -60,7 +60,6 @@ class PlayerCharacter(arcade.Sprite):
         self.character_face_direction = RIGHT_FACING
 
         # Used for flipping between image sequences
-        self.cur_texture = 0
         self.scale = CHARACTER_SCALING
 
         # Track our state
@@ -68,8 +67,9 @@ class PlayerCharacter(arcade.Sprite):
         self.climbing = False
         self.is_on_ladder = False
 
-
+        # Animation
         self.animation_frame = 0
+        self.climbing_frame = 0
 
         # --- Load Textures ---
 
@@ -81,26 +81,38 @@ class PlayerCharacter(arcade.Sprite):
         # main_path = "resources/images/animated_characters/zombie/zombie"
         # main_path = "resources/images/animated_characters/robot/robot"
 
-        # Load textures for idle standing
-        self.idle_texture_pair = load_texture_pair(f"resources/images/player/adventurer-idle-2-00.png")
-        self.jump_texture_pair = load_texture_pair(f"resources/images/player/adventurer-crnr-jmp-00.png")
-        self.fall_texture_pair = load_texture_pair(f"resources/images/player/adventurer-fall-00.png")
+        # Load textures for idling
+        self.idle_textures = []
+        for i in range(4):
+            texture = load_texture_pair(f"resources/images/player/adventurer-idle-2-0{i}.png")
+            self.idle_textures.append(texture)
 
         # Load textures for walking
         self.walk_textures = []
         for i in range(6):
-            texture = load_texture_pair(f"resources/images/player/adventurer-run-0{i}.png")
+            texture = load_texture_pair(f"resources/images/player/adventurer-run3-0{i}.png")
             self.walk_textures.append(texture)
+
+        # Load textures for jumping
+        self.jump_textures = []
+        for i in range(2):
+            texture = load_texture_pair(f"resources/images/player/adventurer-crnr-jmp-0{i}.png")
+            self.jump_textures.append(texture)
+
+        # Load textures for falling
+        self.fall_textures = []
+        for i in range(2):
+            texture = load_texture_pair(f"resources/images/player/adventurer-fall-0{i}.png")
+            self.fall_textures.append(texture)
 
         # Load textures for climbing
         self.climbing_textures = []
-        texture = arcade.load_texture(f"{main_path}_climb0.png")
-        self.climbing_textures.append(texture)
-        texture = arcade.load_texture(f"{main_path}_climb1.png")
-        self.climbing_textures.append(texture)
+        for i in range(4):
+            texture = load_texture_pair(f"resources/images/player/adventurer-ladder-climb-0{i}.png")
+            self.climbing_textures.append(texture)
 
         # Set the initial texture
-        self.texture = self.idle_texture_pair[0]
+        self.texture = self.idle_textures[0][0]
 
         # Hit box will be set based on the first image used. If you want to specify
         # a different hit box, you can do it like the code below.
@@ -111,6 +123,7 @@ class PlayerCharacter(arcade.Sprite):
         pass
 
     def update_animation(self, delta_time: float = 1/60):
+        self.animation_frame += 1
 
         # Figure out if we need to flip face left or right
         if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
@@ -123,32 +136,29 @@ class PlayerCharacter(arcade.Sprite):
             self.climbing = True
         if not self.is_on_ladder and self.climbing:
             self.climbing = False
-        if self.climbing and abs(self.change_y) > 1:
-            self.cur_texture += 1
-            if self.cur_texture > 7:
-                self.cur_texture = 0
+        if self.climbing and (abs(self.change_y) > 1 or abs(self.change_x) > 1):
+            self.climbing_frame += 1
         if self.climbing:
-            self.texture = self.climbing_textures[self.cur_texture // 4]
+            self.texture = self.climbing_textures[self.climbing_frame // 4 % 4][self.character_face_direction]
             return
 
         # Jumping animation
         if self.change_y > 0 and not self.is_on_ladder:
-            self.texture = self.jump_texture_pair[self.character_face_direction]
+            self.texture = self.jump_textures[self.animation_frame // 4 % 2][self.character_face_direction]
             return
         elif self.change_y < 0 and not self.is_on_ladder:
-            self.texture = self.fall_texture_pair[self.character_face_direction]
+            self.texture = self.fall_textures[self.animation_frame // 4 % 2][self.character_face_direction]
             return
 
         # Idle animation
         if self.change_x == 0:
-            self.texture = self.idle_texture_pair[self.character_face_direction]
+            self.texture = self.idle_textures[self.animation_frame // 5 % 4][self.character_face_direction]
             return
 
         # Walking animation
-        self.cur_texture = self.animation_frame // 4 % 6
-        self.texture = self.walk_textures[self.cur_texture][self.character_face_direction]
+        self.texture = self.walk_textures[self.animation_frame // 4 % 6][self.character_face_direction]
 
-        self.animation_frame += 1
+
 
 
 class MyGame(arcade.Window):
