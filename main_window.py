@@ -12,10 +12,10 @@ SCREEN_HEIGHT = 650
 SCREEN_TITLE = "Platformer"
 
 # Constants used to scale our sprites from their original size
-TILE_SCALING = 0.5
+TILE_SCALING = 1.0
 CHARACTER_SCALING = 1.0
 COIN_SCALING = TILE_SCALING
-SPRITE_PIXEL_SIZE = 128
+SPRITE_PIXEL_SIZE = 64
 GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
 
 # Movement speed of player, in pixels per frame
@@ -30,9 +30,6 @@ LEFT_VIEWPORT_MARGIN = 200
 RIGHT_VIEWPORT_MARGIN = 200
 BOTTOM_VIEWPORT_MARGIN = 150
 TOP_VIEWPORT_MARGIN = 100
-
-PLAYER_START_X = SPRITE_PIXEL_SIZE * TILE_SCALING * 2
-PLAYER_START_Y = SPRITE_PIXEL_SIZE * TILE_SCALING * 1
 
 # Constants used to track if the player is facing left or right
 RIGHT_FACING = 0
@@ -140,7 +137,9 @@ class PlayerCharacter(arcade.Sprite):
 
         # Hit box will be set based on the first image used. If you want to specify
         # a different hit box, you can do it like the code below.
-        self.set_hit_box([[-22, -64], [22, -64], [22, 28], [-22, 28]])
+        #self.set_hit_box([[-22, -64], [22, -64], [22, 28], [-22, 28]])
+        #self.set_hit_box([[-22, -56], [-10, -56], [-10, -64], [10, -64], [10, -56], [22, -56], [22, 28], [-22, 28]])
+        self.set_hit_box([[-27, -40], [-3, -64], [3, -64], [27, -40], [27, 28], [-27, 28]])
         #self.set_hit_box(self.texture.hit_box_points)
 
     def update(self):
@@ -250,6 +249,11 @@ class MyGame(arcade.Window):
         self.coin_list = None
         self.wall_list = None
         self.background_list = None
+        self.background_list2 = None
+        self.background_list3 = None
+        self.foreground_list = None
+        self.foreground_list2 = None
+        self.foreground_list3 = None
         self.ladder_list = None
         self.player_list = None
 
@@ -288,15 +292,14 @@ class MyGame(arcade.Window):
         # Create the Sprite lists
         self.player_list = arcade.SpriteList()
         self.background_list = arcade.SpriteList()
+        self.background_list2 = arcade.SpriteList()
+        self.background_list3 = arcade.SpriteList()
+        self.foreground_list = arcade.SpriteList()
+        self.foreground_list2 = arcade.SpriteList()
+        self.foreground_list3 = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
 
-        # Set up the player, specifically placing it at these coordinates.
-        self.player_sprite = PlayerCharacter()
-
-        self.player_sprite.center_x = PLAYER_START_X
-        self.player_sprite.center_y = PLAYER_START_Y
-        self.player_list.append(self.player_sprite)
 
         # --- Load in a map from the tiled editor ---
 
@@ -344,6 +347,18 @@ class MyGame(arcade.Window):
         # -- Background objects
         self.background_list = arcade.tilemap.process_layer(
             my_map, "Background", TILE_SCALING)
+        self.background_list2 = arcade.tilemap.process_layer(
+            my_map, "Background2", TILE_SCALING)
+        self.background_list3 = arcade.tilemap.process_layer(
+            my_map, "Background3", TILE_SCALING)
+
+        # -- Foreground objects
+        self.foreground_list = arcade.tilemap.process_layer(
+            my_map, "Foreground", TILE_SCALING)
+        self.foreground_list2 = arcade.tilemap.process_layer(
+            my_map, "Foreground2", TILE_SCALING)
+        self.foreground_list3 = arcade.tilemap.process_layer(
+            my_map, "Foreground3", TILE_SCALING)
 
         # -- Background objects
         self.ladder_list = arcade.tilemap.process_layer(my_map, "Ladders",
@@ -355,10 +370,27 @@ class MyGame(arcade.Window):
                                                       TILE_SCALING,
                                                       use_spatial_hash=True)
 
+        # -- Start positions
+        self.start_list = arcade.tilemap.process_layer(my_map, "Start Positions",
+                                                      TILE_SCALING,
+                                                      use_spatial_hash=True)
+
         # --- Other stuff
         # Set the background color
         if my_map.background_color:
             arcade.set_background_color(my_map.background_color)
+
+
+        # Set up the player, specifically placing it at these coordinates.
+        self.player_sprite = PlayerCharacter()
+
+        for start_position in self.start_list:
+            if start_position.properties.get("id", -1) == 0:
+                self.player_sprite.center_x = start_position.center_x
+                self.player_sprite.bottom = start_position.center_y - 32
+                break
+
+        self.player_list.append(self.player_sprite)
 
         # Create the "physics engine"
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite,
@@ -373,28 +405,33 @@ class MyGame(arcade.Window):
         arcade.start_render()
 
         # Draw our sprites
-        self.wall_list.draw()
+        self.background_list3.draw()
+        self.background_list2.draw()
         self.background_list.draw()
+        self.wall_list.draw()
         self.ladder_list.draw()
         self.coin_list.draw()
         self.player_list.draw()
+        self.foreground_list3.draw()
+        self.foreground_list2.draw()
+        self.foreground_list.draw()
 
         # Draw our score on the screen, scrolling it with the viewport
-        score_text = f"Score: {self.score}"
-        arcade.draw_text(score_text, 10 + self.view_left, 10 + self.view_bottom,
-                         arcade.csscolor.BLACK, 18)
+        #score_text = f"Score: {self.score}"
+        #arcade.draw_text(score_text, 10 + self.view_left, 10 + self.view_bottom,
+        #                 arcade.csscolor.BLACK, 18)
 
-        #debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
+        debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
         #debug_text = f"{self.player_sprite.attack_mode} {self.player_sprite.attack_frame}, {self.player_sprite.can_jump}"
-        debug_text = f"{self.player_sprite.jump_frame}"
+        #debug_text = f"{self.player_sprite.jump_frame}"
         arcade.draw_text(debug_text, 10 + self.view_left, 30 + self.view_bottom,
                          arcade.csscolor.BLACK, 18)
 
         # Draw hit boxes.
-        for wall in self.wall_list:
-            wall.draw_hit_box(arcade.color.BLACK, 3)
-        #
-        self.player_sprite.draw_hit_box(arcade.color.RED, 3)
+        #for wall in self.wall_list:
+        #    wall.draw_hit_box(arcade.color.BLACK, 3)
+
+        #self.player_sprite.draw_hit_box(arcade.color.RED, 3)
 
     def update_passable_floor(self):
         for wall_sprite in self.passable_wall_list:
@@ -504,8 +541,12 @@ class MyGame(arcade.Window):
         self.coin_list.update_animation(delta_time)
         self.background_list.update_animation(delta_time)
         self.player_list.update_animation(delta_time)
-
-        #self.player_list.update()
+        self.background_list.update_animation(delta_time)
+        self.background_list2.update_animation(delta_time)
+        self.background_list3.update_animation(delta_time)
+        self.foreground_list.update_animation(delta_time)
+        self.foreground_list2.update_animation(delta_time)
+        self.foreground_list3.update_animation(delta_time)
 
         # Respawn
         if self.player_sprite.bottom < -128:
@@ -607,7 +648,7 @@ class MyGame(arcade.Window):
 def main():
     """ Main method """
     window = MyGame()
-    window.setup("map_with_ladders.tmx")
+    window.setup("test1.tmx")
     arcade.run()
 
 
