@@ -7,8 +7,8 @@ import arcade
 import os
 
 # Constants
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Platformer"
 
 # Constants used to scale our sprites from their original size
@@ -279,7 +279,7 @@ class MyGame(arcade.Window):
         self.jump_sound = arcade.load_sound("resources/sounds/jump1.wav")
         self.game_over = arcade.load_sound("resources/sounds/gameover1.wav")
 
-    def setup(self, map_name):
+    def setup(self, map_name, to_id=0):
         """ Set up the game here. Call this function to restart the game. """
 
         # Used to keep track of our scrolling
@@ -299,6 +299,7 @@ class MyGame(arcade.Window):
         self.foreground_list3 = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
+        self.door_list = arcade.SpriteList()
 
 
         # --- Load in a map from the tiled editor ---
@@ -370,8 +371,8 @@ class MyGame(arcade.Window):
                                                       TILE_SCALING,
                                                       use_spatial_hash=True)
 
-        # -- Start positions
-        self.start_list = arcade.tilemap.process_layer(my_map, "Start Positions",
+        # -- Door positions
+        self.door_list = arcade.tilemap.process_layer(my_map, "Doors",
                                                       TILE_SCALING,
                                                       use_spatial_hash=True)
 
@@ -384,10 +385,11 @@ class MyGame(arcade.Window):
         # Set up the player, specifically placing it at these coordinates.
         self.player_sprite = PlayerCharacter()
 
-        for start_position in self.start_list:
-            if start_position.properties.get("id", -1) == 0:
-                self.player_sprite.center_x = start_position.center_x
-                self.player_sprite.bottom = start_position.center_y - 32
+        self.to_id = to_id
+        for door in self.door_list:
+            if int(door.properties.get("id", -1)) == int(self.to_id):
+                self.player_sprite.center_x = door.center_x
+                self.player_sprite.bottom = door.center_y - 32
                 break
 
         self.player_list.append(self.player_sprite)
@@ -411,6 +413,7 @@ class MyGame(arcade.Window):
         self.wall_list.draw()
         self.ladder_list.draw()
         self.coin_list.draw()
+        self.door_list.draw()
         self.player_list.draw()
         self.foreground_list3.draw()
         self.foreground_list2.draw()
@@ -586,6 +589,15 @@ class MyGame(arcade.Window):
             coin.remove_from_sprite_lists()
             arcade.play_sound(self.collect_coin_sound)
 
+        # Door
+        if self.down_pressed:
+            for door in arcade.check_for_collision_with_list(self.player_sprite, self.door_list):
+                if "to_name" in door.properties:
+                    self.down_pressed = False
+                    self.setup(door.properties["to_name"], door.properties.get("to_id", 0))
+                    break
+
+
         # --- Manage Scrolling ---
         self.scroll_viewport()
 
@@ -648,7 +660,7 @@ class MyGame(arcade.Window):
 def main():
     """ Main method """
     window = MyGame()
-    window.setup("test1.tmx")
+    window.setup("test2.tmx")
     arcade.run()
 
 
