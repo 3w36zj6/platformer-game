@@ -1,0 +1,14 @@
+{ "columns":1,
+ "image":"..\/images\/tiles\/painted-style\/Background.png",
+ "imageheight":512,
+ "imagewidth":1900,
+ "margin":0,
+ "name":"Background",
+ "spacing":0,
+ "tilecount":4,
+ "tiledversion":"1.7.2",
+ "tileheight":128,
+ "tilewidth":1900,
+ "type":"tileset",
+ "version":"1.6"
+}

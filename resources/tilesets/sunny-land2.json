@@ -1,0 +1,14 @@
+{ "columns":26,
+ "image":"..\/images\/tiles\/sunny-land\/props.png",
+ "imageheight":896,
+ "imagewidth":1664,
+ "margin":0,
+ "name":"props",
+ "spacing":0,
+ "tilecount":364,
+ "tiledversion":"1.7.2",
+ "tileheight":64,
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.6"
+}

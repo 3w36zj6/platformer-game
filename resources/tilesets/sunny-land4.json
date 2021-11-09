@@ -1,0 +1,14 @@
+{ "columns":11,
+ "image":"..\/images\/tiles\/sunny-land\/middle.png",
+ "imageheight":1472,
+ "imagewidth":704,
+ "margin":0,
+ "name":"middle",
+ "spacing":0,
+ "tilecount":253,
+ "tiledversion":"1.7.2",
+ "tileheight":64,
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.6"
+}

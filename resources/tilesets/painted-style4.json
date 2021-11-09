@@ -1,0 +1,39 @@
+{ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"Background",
+ "spacing":0,
+ "tilecount":2,
+ "tiledversion":"1.7.2",
+ "tileheight":512,
+ "tiles":[
+        {
+         "animation":[
+                {
+                 "duration":100,
+                 "tileid":1
+                }, 
+                {
+                 "duration":100,
+                 "tileid":0
+                }],
+         "id":0,
+         "image":"..\/images\/tiles\/painted-style\/Layer 5 anim1.png",
+         "imageheight":512,
+         "imagewidth":1900
+        }, 
+        {
+         "id":1,
+         "image":"..\/images\/tiles\/painted-style\/Layer 5 anim2.png",
+         "imageheight":512,
+         "imagewidth":1900
+        }],
+ "tilewidth":1900,
+ "type":"tileset",
+ "version":"1.6"
+}

@@ -1,0 +1,14 @@
+{ "columns":64,
+ "image":"..\/images\/tiles\/doors\/doors.png",
+ "imageheight":3072,
+ "imagewidth":4096,
+ "margin":0,
+ "name":"door",
+ "spacing":0,
+ "tilecount":3072,
+ "tiledversion":"1.7.2",
+ "tileheight":64,
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.6"
+}

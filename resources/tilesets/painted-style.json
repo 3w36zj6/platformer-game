@@ -1,0 +1,14 @@
+{ "columns":29,
+ "image":"..\/images\/tiles\/painted-style\/tileset.png",
+ "imageheight":512,
+ "imagewidth":1900,
+ "margin":0,
+ "name":"tileset",
+ "spacing":0,
+ "tilecount":232,
+ "tiledversion":"1.7.2",
+ "tileheight":64,
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.6"
+}
