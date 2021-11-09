@@ -303,78 +303,71 @@ class MyGame(arcade.Window):
 
 
         # --- Load in a map from the tiled editor ---
-
-        # Name of the layer in the file that has our platforms/walls
-        platforms_layer_name = "Platforms"
-        passable_platforms_layer_name = "Passable Platforms"
-        moving_platforms_layer_name = "Moving Platforms"
-
-        # Name of the layer that has items for pick-up
-        coins_layer_name = "Coins"
-
         # Map name
         self.map_name = map_name
 
+        layer_options = {
+            "Platforms": {
+                "use_spatial_hash": True,
+            },
+            "Passable Platforms": {
+                "use_spatial_hash": True,
+            },
+            "Moving Platforms": {
+                "use_spatial_hash": False,
+            },
+            "Ladders": {
+                "use_spatial_hash": True,
+            },
+            "Coins": {
+                "use_spatial_hash": True,
+            },
+        }
+
+
         # Read in the tiled map
-        my_map = arcade.tilemap.read_tmx(f"resources/tmx_maps/{self.map_name}")
+        my_map = arcade.tilemap.TileMap(f"./resources/tilemaps/{map_name}", TILE_SCALING, layer_options)
 
         # Calculate the right edge of the my_map in pixels
-        self.map_width = my_map.map_size.width * GRID_PIXEL_SIZE
-        self.map_height = my_map.map_size.height * GRID_PIXEL_SIZE
+        self.map_width = my_map.width * GRID_PIXEL_SIZE
+        self.map_height = my_map.height * GRID_PIXEL_SIZE
 
         # -- Platforms
-        self.wall_list = arcade.tilemap.process_layer(my_map,
-                                                      platforms_layer_name,
-                                                      TILE_SCALING,
-                                                      use_spatial_hash=True)
+        self.wall_list = my_map.sprite_lists.get("Platforms", arcade.SpriteList())
 
         # Passable Platforms
-        self.passable_wall_list = arcade.tilemap.process_layer(my_map,
-                                                               passable_platforms_layer_name,
-                                                               TILE_SCALING,
-                                                               use_spatial_hash=True)
+        self.passable_wall_list = my_map.sprite_lists.get("Passable Platforms", arcade.SpriteList())
+
 
         for sprite in self.passable_wall_list:
             sprite.can_pass = False
             self.wall_list.append(sprite)
 
         # -- Moving Platforms
-        self.moving_platforms_list = arcade.tilemap.process_layer(
-            my_map, moving_platforms_layer_name, TILE_SCALING)
+        self.moving_platforms_list = my_map.sprite_lists.get("Moving Platforms", arcade.SpriteList())
+
 
         for sprite in self.moving_platforms_list:
             self.wall_list.append(sprite)
 
         # -- Background objects
-        self.background_list = arcade.tilemap.process_layer(
-            my_map, "Background", TILE_SCALING)
-        self.background_list2 = arcade.tilemap.process_layer(
-            my_map, "Background2", TILE_SCALING)
-        self.background_list3 = arcade.tilemap.process_layer(
-            my_map, "Background3", TILE_SCALING)
+        self.background_list = my_map.sprite_lists.get("Background", arcade.SpriteList())
+        self.background_list2 = my_map.sprite_lists.get("Background2", arcade.SpriteList())
+        self.background_list3 = my_map.sprite_lists.get("Background3", arcade.SpriteList())
 
         # -- Foreground objects
-        self.foreground_list = arcade.tilemap.process_layer(
-            my_map, "Foreground", TILE_SCALING)
-        self.foreground_list2 = arcade.tilemap.process_layer(
-            my_map, "Foreground2", TILE_SCALING)
-        self.foreground_list3 = arcade.tilemap.process_layer(
-            my_map, "Foreground3", TILE_SCALING)
+        self.foreground_list = my_map.sprite_lists.get("Foreground", arcade.SpriteList())
+        self.foreground_list2 = my_map.sprite_lists.get("Foreground2", arcade.SpriteList())
+        self.foreground_list3 = my_map.sprite_lists.get("Foreground3", arcade.SpriteList())
 
         # -- Background objects
-        self.ladder_list = arcade.tilemap.process_layer(my_map, "Ladders",
-                                                        TILE_SCALING,
-                                                        use_spatial_hash=True)
+        self.ladder_list = my_map.sprite_lists.get("Ladders", arcade.SpriteList())
 
         # -- Coins
-        self.coin_list = arcade.tilemap.process_layer(my_map, coins_layer_name,
-                                                      TILE_SCALING,
-                                                      use_spatial_hash=True)
+        self.coin_list = my_map.sprite_lists.get("Coins", arcade.SpriteList())
 
         # -- Door positions
-        self.door_list = arcade.tilemap.process_layer(my_map, "Doors",
-                                                      TILE_SCALING,
-                                                      use_spatial_hash=True)
+        self.door_list = my_map.sprite_lists.get("Doors", arcade.SpriteList())
 
         # --- Other stuff
         # Set the background color
@@ -427,23 +420,22 @@ class MyGame(arcade.Window):
         debug_text = f"(x, y) = ({self.player_sprite.left}, {self.player_sprite.bottom})"
         #debug_text = f"{self.player_sprite.attack_mode} {self.player_sprite.attack_frame}, {self.player_sprite.can_jump}"
         #debug_text = f"{self.player_sprite.jump_frame}"
-        arcade.draw_text(debug_text, 10 + self.view_left, 30 + self.view_bottom,
-                         arcade.csscolor.BLACK, 18)
 
         # Draw hit boxes.
-        #for wall in self.wall_list:
-        #    wall.draw_hit_box(arcade.color.BLACK, 3)
+        for wall in self.wall_list:
+            if hasattr(wall, 'can_pass') and not wall.can_pass:
+                wall.draw_hit_box(arcade.color.BLACK, 3)
 
         #self.player_sprite.draw_hit_box(arcade.color.RED, 3)
 
     def update_passable_floor(self):
-        for wall_sprite in self.passable_wall_list:
+        for wall_sprite in self.wall_list:
             #print(wall_sprite.top, self.player_sprite.bottom)
-            if wall_sprite.top - 10 <= self.player_sprite.bottom:
-                wall_sprite.can_pass = False
-                wall_sprite.add_spatial_hashes()
-            else:
-                if not wall_sprite.can_pass:
+            if hasattr(wall_sprite, "can_pass"):
+                if wall_sprite.top - 10 <= self.player_sprite.bottom and wall_sprite.can_pass:
+                    wall_sprite.can_pass = False
+                    wall_sprite.add_spatial_hashes()
+                elif wall_sprite.top - 10 > self.player_sprite.bottom and not wall_sprite.can_pass:
                     wall_sprite.can_pass = True
                     wall_sprite.clear_spatial_hashes()
 
@@ -660,7 +652,7 @@ class MyGame(arcade.Window):
 def main():
     """ Main method """
     window = MyGame()
-    window.setup("test2.tmx")
+    window.setup("test2.json")
     arcade.run()
 
 
