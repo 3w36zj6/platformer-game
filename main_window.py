@@ -518,7 +518,7 @@ class MyGame(arcade.Window):
         """ Movement and game logic """
 
         # Move the player with the physics engine
-        self.physics_engine.update()
+        hit_sprite_list = self.physics_engine.update()
 
         # Update animations
         if self.physics_engine.can_jump():
