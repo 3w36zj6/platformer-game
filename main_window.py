@@ -244,28 +244,11 @@ class MyGame(arcade.Window):
         self.down_pressed = False
         self.jump_needs_reset = False
 
-        # These are "lists" that keep track of our sprites. Each sprite should
-        # go into a list.
-        self.coin_list = None
-        self.wall_list = None
-        self.background_list = None
-        self.background_list2 = None
-        self.background_list3 = None
-        self.foreground_list = None
-        self.foreground_list2 = None
-        self.foreground_list3 = None
-        self.ladder_list = None
-        self.player_list = None
-
         # Separate variable that holds the player sprite
         self.player_sprite = None
 
         # Our "physics" engine
         self.physics_engine = None
-
-        # Used to keep track of our scrolling
-        self.view_bottom = 0
-        self.view_left = 0
 
         self.map_height = 0
         self.map_width = 0
@@ -284,19 +267,20 @@ class MyGame(arcade.Window):
 
         # Used to keep track of our scrolling
         self.view_bottom = 0
+        self.view_bottom_old = 0
         self.view_left = 0
+        self.view_left_old = 0
+
+        self.scroll_speed_x = 0
+        self.scroll_speed_y = 0
 
         # Keep track of the score
         self.score = 0
 
         # Create the Sprite lists
         self.player_list = arcade.SpriteList()
-        self.background_list = arcade.SpriteList()
-        self.background_list2 = arcade.SpriteList()
-        self.background_list3 = arcade.SpriteList()
-        self.foreground_list = arcade.SpriteList()
-        self.foreground_list2 = arcade.SpriteList()
-        self.foreground_list3 = arcade.SpriteList()
+        self.background_list = [arcade.SpriteList() for i in range(4)]
+        self.foreground_list = [arcade.SpriteList() for i in range(4)]
         self.wall_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
         self.door_list = arcade.SpriteList()
@@ -324,19 +308,28 @@ class MyGame(arcade.Window):
             },
         }
 
+        # Parallax
+        self.background_parallax_list = [(1,1) for i in range(4)]
+        self.foreground_parallax_list = [(1,1) for i in range(4)]
 
         # Read in the tiled map
-        my_map = arcade.tilemap.TileMap(f"./resources/tilemaps/{map_name}", TILE_SCALING, layer_options)
+        self.my_map = arcade.tilemap.TileMap(f"./resources/tilemaps/{map_name}", TILE_SCALING, layer_options)
+        for layer in self.my_map.tiled_map.layers:
+            if "Background" in layer.name:
+                self.background_parallax_list[int(layer.name[-1])] = (layer.parallax_factor.x, layer.parallax_factor.y)
+            if "Foreground" in layer.name:
+                self.foreground_parallax_list[int(layer.name[-1])] = (layer.parallax_factor.x, layer.parallax_factor.y)
+
 
         # Calculate the right edge of the my_map in pixels
-        self.map_width = my_map.width * GRID_PIXEL_SIZE
-        self.map_height = my_map.height * GRID_PIXEL_SIZE
+        self.map_width = self.my_map.width * GRID_PIXEL_SIZE
+        self.map_height = self.my_map.height * GRID_PIXEL_SIZE
 
         # -- Platforms
-        self.wall_list = my_map.sprite_lists.get("Platforms", arcade.SpriteList())
+        self.wall_list = self.my_map.sprite_lists.get("Platforms", arcade.SpriteList())
 
         # Passable Platforms
-        self.passable_wall_list = my_map.sprite_lists.get("Passable Platforms", arcade.SpriteList())
+        self.passable_wall_list = self.my_map.sprite_lists.get("Passable Platforms", arcade.SpriteList())
 
 
         for sprite in self.passable_wall_list:
@@ -344,35 +337,31 @@ class MyGame(arcade.Window):
             self.wall_list.append(sprite)
 
         # -- Moving Platforms
-        self.moving_platforms_list = my_map.sprite_lists.get("Moving Platforms", arcade.SpriteList())
+        self.moving_platforms_list = self.my_map.sprite_lists.get("Moving Platforms", arcade.SpriteList())
 
 
         for sprite in self.moving_platforms_list:
             self.wall_list.append(sprite)
 
         # -- Background objects
-        self.background_list = my_map.sprite_lists.get("Background", arcade.SpriteList())
-        self.background_list2 = my_map.sprite_lists.get("Background2", arcade.SpriteList())
-        self.background_list3 = my_map.sprite_lists.get("Background3", arcade.SpriteList())
+        self.background_list = [self.my_map.sprite_lists.get(f"Background{i}", arcade.SpriteList()) for i in range(4)]
 
         # -- Foreground objects
-        self.foreground_list = my_map.sprite_lists.get("Foreground", arcade.SpriteList())
-        self.foreground_list2 = my_map.sprite_lists.get("Foreground2", arcade.SpriteList())
-        self.foreground_list3 = my_map.sprite_lists.get("Foreground3", arcade.SpriteList())
+        self.foreground_list =  [self.my_map.sprite_lists.get(f"Foreground{i}", arcade.SpriteList()) for i in range(4)]
 
         # -- Background objects
-        self.ladder_list = my_map.sprite_lists.get("Ladders", arcade.SpriteList())
+        self.ladder_list = self.my_map.sprite_lists.get("Ladders", arcade.SpriteList())
 
         # -- Coins
-        self.coin_list = my_map.sprite_lists.get("Coins", arcade.SpriteList())
+        self.coin_list = self.my_map.sprite_lists.get("Coins", arcade.SpriteList())
 
         # -- Door positions
-        self.door_list = my_map.sprite_lists.get("Doors", arcade.SpriteList())
+        self.door_list = self.my_map.sprite_lists.get("Doors", arcade.SpriteList())
 
         # --- Other stuff
         # Set the background color
-        if my_map.background_color:
-            arcade.set_background_color(my_map.background_color)
+        if self.my_map.background_color:
+            arcade.set_background_color(self.my_map.background_color)
 
 
         # Set up the player, specifically placing it at these coordinates.
@@ -400,17 +389,16 @@ class MyGame(arcade.Window):
         arcade.start_render()
 
         # Draw our sprites
-        self.background_list3.draw()
-        self.background_list2.draw()
-        self.background_list.draw()
+        for i in range(1,4)[::-1]:
+            self.background_list[i].draw()
         self.wall_list.draw()
         self.ladder_list.draw()
         self.coin_list.draw()
         self.door_list.draw()
         self.player_list.draw()
-        self.foreground_list3.draw()
-        self.foreground_list2.draw()
-        self.foreground_list.draw()
+        for i in range(1,4)[::-1]:
+            self.foreground_list[i].draw()
+
 
         # Draw our score on the screen, scrolling it with the viewport
         #score_text = f"Score: {self.score}"
@@ -534,14 +522,13 @@ class MyGame(arcade.Window):
             self.process_keychange()
 
         self.coin_list.update_animation(delta_time)
-        self.background_list.update_animation(delta_time)
         self.player_list.update_animation(delta_time)
-        self.background_list.update_animation(delta_time)
-        self.background_list2.update_animation(delta_time)
-        self.background_list3.update_animation(delta_time)
-        self.foreground_list.update_animation(delta_time)
-        self.foreground_list2.update_animation(delta_time)
-        self.foreground_list3.update_animation(delta_time)
+
+        for i in range(1,4):
+            self.background_list[i].update_animation(delta_time)
+            self.foreground_list[i].update_animation(delta_time)
+            self.background_list[i].move(self.scroll_speed_x*(1-self.background_parallax_list[i][0]), self.scroll_speed_y*(1-self.background_parallax_list[i][1]))
+            self.foreground_list[i].move(self.scroll_speed_x*(1-self.foreground_parallax_list[i][0]), self.scroll_speed_y*(1-self.foreground_parallax_list[i][1]))
 
         # Respawn
         if self.player_sprite.bottom < -128:
@@ -647,6 +634,12 @@ class MyGame(arcade.Window):
                                 SCREEN_WIDTH + self.view_left,
                                 self.view_bottom,
                                 SCREEN_HEIGHT + self.view_bottom)
+
+
+        self.scroll_speed_x = self.view_left - self.view_left_old
+        self.scroll_speed_y = self.view_bottom - self.view_bottom_old
+        self.view_left_old = self.view_left
+        self.view_bottom_old = self.view_bottom
 
 
 def main():
