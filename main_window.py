@@ -410,22 +410,22 @@ class MyGame(arcade.Window):
         #debug_text = f"{self.player_sprite.jump_frame}"
 
         # Draw hit boxes.
-        for wall in self.wall_list:
-            if hasattr(wall, 'can_pass') and not wall.can_pass:
-                wall.draw_hit_box(arcade.color.BLACK, 3)
+        #for wall in self.wall_list:
+        #    if hasattr(wall, 'can_pass') and not wall.can_pass:
+        #        wall.draw_hit_box(arcade.color.BLACK, 3)
 
         #self.player_sprite.draw_hit_box(arcade.color.RED, 3)
 
     def update_passable_floor(self):
-        for wall_sprite in self.wall_list:
+        for wall_sprite in self.passable_wall_list:
             #print(wall_sprite.top, self.player_sprite.bottom)
-            if hasattr(wall_sprite, "can_pass"):
-                if wall_sprite.top - 10 <= self.player_sprite.bottom and wall_sprite.can_pass:
-                    wall_sprite.can_pass = False
-                    wall_sprite.add_spatial_hashes()
-                elif wall_sprite.top - 10 > self.player_sprite.bottom and not wall_sprite.can_pass:
-                    wall_sprite.can_pass = True
-                    wall_sprite.clear_spatial_hashes()
+            #if hasattr(wall_sprite, "can_pass"):
+            if wall_sprite.top - 10 <= self.player_sprite.bottom and wall_sprite.can_pass:
+                wall_sprite.can_pass = False
+                wall_sprite.add_spatial_hashes()
+            elif wall_sprite.top - 10 > self.player_sprite.bottom and not wall_sprite.can_pass:
+                wall_sprite.can_pass = True
+                wall_sprite.clear_spatial_hashes()
 
     def process_keychange(self):
         """
